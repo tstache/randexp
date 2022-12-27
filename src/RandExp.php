@@ -41,7 +41,7 @@ class RandExp
      */
     public function __construct(string $regexp, string $options = '')
     {
-        $this->maxRepetition = 100;
+        $this->maxRepetition = 10;
         $this->charRange = new RangeSet(32, 126);
         $this->ignoreCase = str_contains($options, 'i');
         $this->fixedSeed = str_contains($options, 'f');
