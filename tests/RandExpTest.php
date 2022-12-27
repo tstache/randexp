@@ -92,13 +92,13 @@ class RandExpTest extends TestCase
     /**
      * @dataProvider badPatternProvider
      *
-     * @param $pattern
+     * @param string $pattern
      *
      * @return void
      * @throws RegexException
      * @throws Exception
      */
-    public function testBadPatternDoesNotMatch($pattern): void
+    public function testBadPatternDoesNotMatch(string $pattern): void
     {
         $rand = new RandExp($pattern);
         // Generate several times.
@@ -117,28 +117,28 @@ class RandExpTest extends TestCase
     public function badPatternProvider(): array
     {
         return [
-            ['a^'],
-            ['b^'],
-            ['$c'],
-            ['$d'],
-            ['e\bf'],
-            ['\Bg'],
-            ['[^\W\w]'],
-            ['[^\D\d]'],
-            ['[^\S\s]'],
+            'a^'      => ['a^'],
+            'b^'      => ['b^'],
+            '$c'      => ['$c'],
+            '$d'      => ['$d'],
+            'e\bf'    => ['e\bf'],
+            '\Bg'     => ['\Bg'],
+            '[^\W\w]' => ['[^\W\w]'],
+            '[^\D\d]' => ['[^\D\d]'],
+            '[^\S\s]' => ['[^\S\s]'],
         ];
     }
 
     /**
      * @dataProvider goodPatternProvider
      *
-     * @param $pattern
+     * @param string $pattern
      *
      * @return void
      * @throws RegexException
      * @throws Exception
      */
-    public function testGoodPatternMatches($pattern): void
+    public function testGoodPatternMatches(string $pattern): void
     {
         $rand = new RandExp($pattern);
         // Generate several times.
@@ -160,85 +160,148 @@ class RandExpTest extends TestCase
             // Ignore the case of alphabetic characters
             //'hey there/i',
             // Only matches the beginning of a string
-            ['^The'],
+            '^The'             => ['^The'],
+
             // Only matches the end of a string
-            ['and$'],
+            'and$'             => ['and$'],
+
             // Matches any word boundary (test characters must exist at the beginning or end of a word within the string)
-            ['ly\b'],
+            'ly\b'             => ['ly\b'],
+
             // Matches any non-word boundary.
-            ['m\Bore'],
+            'm\Bore'           => ['m\Bore'],
+
             // All characters except the listed special characters match a single instance of themselves
-            ['a'],
+            'a'                => ['a'],
+
             // A backslash escapes special characters to suppress their special meaning
-            ['\+'],
+            '\+'               => ['\+'],
+
             // Matches a new line character
-            ['a new\nline'],
+            'a new\nline'      => ['a new\nline'],
+
             // Matches a form feed character
-            ['\f'],
+            '\f'               => ['\f'],
+
             // Matches a tab character
-            ['col1\tcol2\tcol3'],
+            'col1\tcol2\tcol3' => ['col1\tcol2\tcol3'],
+
             // Matches a vertical tab character
-            ['row1\vrow2'],
+            'row1\vrow2'       => ['row1\vrow2'],
+
             // Matches a backspace
-            ['something[\b]'],
+            'something[\b]'    => ['something[\b]'],
+
             // Matches any one character enclosed in the character set. You may use a hyphen to denote range
-            ['[abcD!]'],
-            ['[a-z]'],
-            ['[0-4]'],
-            ['[a-zA-Z0-9]'],
-            ['[\w]'],
-            ['[\d]'],
-            ['[\s]'],
-            ['[\W]'],
-            ['[\D]'],
-            ['[\S]'],
+            '[abcD!]'          => ['[abcD!]'],
+            '[a-z]'            => ['[a-z]'],
+            '[0-4]'            => ['[0-4]'],
+            '[a-zA-Z0-9]'      => ['[a-zA-Z0-9]'],
+            '[\w]'             => ['[\w]'],
+            '[\d]'             => ['[\d]'],
+            '[\s]'             => ['[\s]'],
+            '[\W]'             => ['[\W]'],
+            '[\D]'             => ['[\D]'],
+            '[\S]'             => ['[\S]'],
+
             // Matches any one character not enclosed in the character set
-            ['[^AN]BC'],
-            ['[^\w]'],
-            ['[^\d]'],
-            ['[^\s]'],
-            ['[^\W]'],
-            ['[^\D]'],
-            ['[^\S]'],
+            '[^AN]BC'          => ['[^AN]BC'],
+            '[^\w]'            => ['[^\w]'],
+            '[^\d]'            => ['[^\d]'],
+            '[^\s]'            => ['[^\s]'],
+            '[^\W]'            => ['[^\W]'],
+            '[^\D]'            => ['[^\D]'],
+            '[^\S]'            => ['[^\S]'],
+
             // Matches any character except newline or another Unicode line terminator
-            ['b.t'],
+            'b.t'              => ['b.t'],
+
             // Matches any alphanumeric character including the underscore. Equivalent to [a-zA-Z0-9]
-            ['\w'],
+            '\w'               => ['\w'],
+
             // Matches any single non-word character. Equivalent to [^a-zA-Z0-9]
-            ['\W'],
+            '\W'               => ['\W'],
+
             // Matches any single digit. Equivalent to [0-9]
-            ['\d\d\d\d'],
+            '\d\d\d\d'         => ['\d\d\d\d'],
+
             // Matches any non-digit, Equivalent to [^0-9]
-            ['\D'],
+            '\D'               => ['\D'],
+
             // Matches any single space character. Equivalent to
             // [ \\f\\n\\r\\t\\v\\u00A0\\u1680\\u180e\\u2000\\u2001\\u2002\\u2003\\u2004\\u2005\\u2006\\u2007\\u2008\\u2009\\u200a\\u2028\\u2029\\u2028\\u2029\\u202f\\u205f\\u3000]
-            ['in\sbetween'],
+            'in\sbetween'      => ['in\sbetween'],
+
             // Matches any single non-space character. Equivalent to
             // [^ \\f\\n\\r\\t\\v\\u00A0\\u1680\\u180e\\u2000\\u2001\\u2002\\u2003\\u2004\\u2005\\u2006\\u2007\\u2008\\u2009\\u200a\\u2028\\u2029\\u2028\\u2029\\u202f\\u205f\\u3000]
-            ['\S'],
+            '\S'               => ['\S'],
+
             // Matches exactly x occurrences of a regular expression
-            ['\d{5}'],
+            '\d{5}'            => ['\d{5}'],
+
             // Matches x or more occurrences of a regular expression
-            ['\s{2,}'],
+            '\s{2,}'           => ['\s{2,}'],
+
             // Matches x to y number of occurrences of a regular expression
-            ['\d{2,4}'],
+            '\d{2,4}'          => ['\d{2,4}'],
+
             // Matches zero or one occurrences. Equivalent to {0,1}
-            ['a\s?b'],
+            'a\s?b'            => ['a\s?b'],
+
             // Matches zero or more occurrences. Equivalent to {0,}
-            ['we*'],
+            'we*'              => ['we*'],
+
             // Matches one ore more occurrences. Equivalent to {1,}
-            ['fe+d'],
+            'fe+d'             => ['fe+d'],
+
             // Grouping characters together to create a clause. May be nested. Also captures the desired subpattern
-            ['(abc)+(def)'],
+            '(abc)+(def)'      => ['(abc)+(def)'],
+
             // Matches x but does not capture it
-            ['(?:.d){2}'],
+            '(?:.d){2}'        => ['(?:.d){2}'],
+
             // Matches only one clause on either side of the pipe
-            ['forever|young'],
+            'forever|young'    => ['forever|young'],
+
             // "\\x" (where x is a number from 1 to 9) when added to the end of a regular expression pattern allows you
-            // to back reference a subpattern within the pattern, so the value of the subpattern is remembered and used as part of the matching.
-            ['(\w+)\s+\1'],
-            ['(a|b){5}\1'],
-            ['(a)(b)\1\2'],
+            // to back reference a subpattern within the pattern, so the value of the subpattern is remembered and used
+            // as part of the matching.
+            '(\w+)\s+\1'       => ['(\w+)\s+\1'],
+            '(a|b){5}\1'       => ['(a|b){5}\1'],
+            '(a)(b)\1\2'       => ['(a)(b)\1\2'],
+        ];
+    }
+
+    /**
+     * @dataProvider escapedPatternProvider
+     *
+     * @param string $pattern
+     * @param string $expectation
+     *
+     * @return void
+     * @throws RegexException
+     * @throws Exception
+     */
+    public function testEscapedPatterns(string $pattern, string $expectation): void
+    {
+        $this->assertEquals($expectation, (new RandExp($pattern))->generate());
+    }
+
+    public function escapedPatternProvider(): array
+    {
+        return [
+            'as.df' => ['as\.df', 'as.df'],
+            'as^df' => ['as\^df', 'as^df'],
+            'as$df' => ['as\$df', 'as$df'],
+            'as|df' => ['as\|df', 'as|df'],
+            'as[d]' => ['as\[d\]', 'as[d]'],
+            'as(d)' => ['as\(d\)', 'as(d)'],
+            'as{d}' => ['as\{d\}', 'as{d}'],
+            'as?df' => ['as\?df', 'as?df'],
+            'as+df' => ['as\+df', 'as+df'],
+            'as*df' => ['as\*df', 'as*df'],
+            // Backslash must be escaped multiple times for PHP strings
+            'as\df' => ['as\\\\df', 'as\df'],
         ];
     }
 }
