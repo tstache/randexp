@@ -10,6 +10,7 @@ use function array_push;
 use function count;
 use function mb_chr;
 use function random_int;
+use function str_contains;
 use function time;
 
 /**

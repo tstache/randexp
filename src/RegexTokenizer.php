@@ -145,7 +145,6 @@ class RegexTokenizer
 
     /**
      * turns class into tokens
-     * reads str until it encounters a ']'
      *
      * @param string  $str
      * @param ?string $regexpStr
@@ -167,26 +166,23 @@ class RegexTokenizer
                 $rs = array_column($matches, $i);
                 $rsValues = array_column($rs, 0);
                 $rsOffsets = array_column($rs, 1);
-                if (($rsOffsets[1] ?? -1) >= 0) {
-                    $tokens[] = self::TOKEN_WORD;
-                } elseif (($rsOffsets[2] ?? -1) >= 0) {
-                    $tokens[] = self::TOKEN_INT;
-                } elseif (($rsOffsets[3] ?? -1) >= 0) {
-                    $tokens[] = self::TOKEN_WHITESPACE;
-                } elseif (($rsOffsets[4] ?? -1) >= 0) {
-                    $tokens[] = self::TOKEN_NOT_WORD;
-                } elseif (($rsOffsets[5] ?? -1) >= 0) {
-                    $tokens[] = self::TOKEN_NOT_INT;
-                } elseif (($rsOffsets[6] ?? -1) >= 0) {
-                    $tokens[] = self::TOKEN_NOT_WHITESPACE;
-                } elseif (($rsOffsets[7] ?? -1) >= 0) {
-                    $tokens[] = [
+                $token = match (true) {
+                    ($rsOffsets[1] ?? -1) >= 0 => self::TOKEN_WORD,
+                    ($rsOffsets[2] ?? -1) >= 0 => self::TOKEN_INT,
+                    ($rsOffsets[3] ?? -1) >= 0 => self::TOKEN_WHITESPACE,
+                    ($rsOffsets[4] ?? -1) >= 0 => self::TOKEN_NOT_WORD,
+                    ($rsOffsets[5] ?? -1) >= 0 => self::TOKEN_NOT_INT,
+                    ($rsOffsets[6] ?? -1) >= 0 => self::TOKEN_NOT_WHITESPACE,
+                    ($rsOffsets[7] ?? -1) >= 0 => [
                         'type' => self::TYPE_RANGE,
                         'from' => mb_ord($rsValues[8] ?: $rsValues[9]),
                         'to'   => mb_ord($rsValues[10]),
-                    ];
-                } elseif (($rsOffsets[12] ?? -1) >= 0) {
-                    $tokens[] = ['type' => self::TYPE_CHAR, 'value' => mb_ord($rsValues[12])];
+                    ],
+                    ($rsOffsets[12] ?? -1) >= 0 => ['type' => self::TYPE_CHAR, 'value' => mb_ord($rsValues[12])],
+                    default => null,
+                };
+                if ($token !== null) {
+                    $tokens[] = $token;
                 } else {
                     return [$tokens, max($rsOffsets) + 1];
                 }
@@ -223,41 +219,27 @@ class RegexTokenizer
                 case '\\':
                     // Handle escaped characters, includes a few sets.
                     $c = mb_substr($str, $i++, 1);
-                    switch ($c) {
-                        case 'b':
-                            $stack[] = self::POSITION_WORD_BOUNDARY;
-                            break;
-                        case 'B':
-                            $stack[] = self::POSITION_NON_WORD_BOUNDARY;
-                            break;
-                        case 'w':
-                            $stack[] = self::TOKEN_WORD;
-                            break;
-                        case 'W':
-                            $stack[] = self::TOKEN_NOT_WORD;
-                            break;
-                        case 'd':
-                            $stack[] = self::TOKEN_INT;
-                            break;
-                        case 'D':
-                            $stack[] = self::TOKEN_NOT_INT;
-                            break;
-                        case 's':
-                            $stack[] = self::TOKEN_WHITESPACE;
-                            break;
-                        case 'S':
-                            $stack[] = self::TOKEN_NOT_WHITESPACE;
-                            break;
-                        default:
-                            // Check if c is integer.
-                            if (preg_match('/\d/', $c)) {
-                                // In which case it's a reference.
-                                $stack[] = ['type' => self::TYPE_REFERENCE, 'value' => (int)$c];
-                            } else {
-                                // Escaped character.
-                                $stack[] = ['type' => self::TYPE_CHAR, 'value' => mb_ord($c)];
-                            }
-                    }
+                    $stack[] = match ($c) {
+                        'b'     => self::POSITION_WORD_BOUNDARY,
+                        'B'     => self::POSITION_NON_WORD_BOUNDARY,
+                        'w'     => self::TOKEN_WORD,
+                        'W'     => self::TOKEN_NOT_WORD,
+                        'd'     => self::TOKEN_INT,
+                        'D'     => self::TOKEN_NOT_INT,
+                        's'     => self::TOKEN_WHITESPACE,
+                        'S'     => self::TOKEN_NOT_WHITESPACE,
+                        '0'     => ['type' => self::TYPE_REFERENCE, 'value' => 0],
+                        '1'     => ['type' => self::TYPE_REFERENCE, 'value' => 1],
+                        '2'     => ['type' => self::TYPE_REFERENCE, 'value' => 2],
+                        '3'     => ['type' => self::TYPE_REFERENCE, 'value' => 3],
+                        '4'     => ['type' => self::TYPE_REFERENCE, 'value' => 4],
+                        '5'     => ['type' => self::TYPE_REFERENCE, 'value' => 5],
+                        '6'     => ['type' => self::TYPE_REFERENCE, 'value' => 6],
+                        '7'     => ['type' => self::TYPE_REFERENCE, 'value' => 7],
+                        '8'     => ['type' => self::TYPE_REFERENCE, 'value' => 8],
+                        '9'     => ['type' => self::TYPE_REFERENCE, 'value' => 9],
+                        default => ['type' => self::TYPE_CHAR, 'value' => mb_ord($c)],
+                    };
 
                     break;
                 case '^':

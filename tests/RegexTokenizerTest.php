@@ -1,10 +1,16 @@
 <?php
+declare(strict_types=1);
 
 namespace Tests\RandExp;
 
 use RandExp\RegexException;
 use RandExp\RegexTokenizer;
 use PHPUnit\Framework\TestCase;
+
+use function array_map;
+use function array_merge;
+use function mb_ord;
+use function str_split;
 
 class RegexTokenizerTest extends TestCase
 {
@@ -17,8 +23,8 @@ class RegexTokenizerTest extends TestCase
             $exception = $e;
         }
         $message = 'Invalid regular expression: /' . $regexp . '/: ' . $message;
-        $this->assertInstanceOf(RegexException::class, $exception);
-        $this->assertEquals($message, $exception->getMessage());
+        static::assertInstanceOf(RegexException::class, $exception);
+        static::assertEquals($message, $exception->getMessage());
     }
 
     public function testInvalidRegexWillThrowException(): void
@@ -40,33 +46,33 @@ class RegexTokenizerTest extends TestCase
     public function testCharacterTokensConversion(): void
     {
         $str = RegexTokenizer::strToChars("\\xFF hellow \\u00A3 \\50 there \\cB \\n \\w [\\b]");
-        $this->assertEquals("\xFF hellow \u{00A3} \\( there  \n \\w \u{0008}", $str);
+        static::assertEquals("\xFF hellow \u{00A3} \\( there  \n \\w \u{0008}", $str);
 
         $tokens = RegexTokenizer::tokenizeClass("\\w\\d$\\s\\]\\B\\W\\D\\S.+-] will ignore");
-        $this->assertEquals(true, is_array($tokens[0]));
-        $this->assertEquals(RegexTokenizer::TOKEN_WORD, $tokens[0][0]);
-        $this->assertEquals(RegexTokenizer::TOKEN_INT, $tokens[0][1]);
-        $this->assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 36], $tokens[0][2]);
-        $this->assertEquals(RegexTokenizer::TOKEN_WHITESPACE, $tokens[0][3]);
-        $this->assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 93], $tokens[0][4]);
-        $this->assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 66], $tokens[0][5]);
-        $this->assertEquals(RegexTokenizer::TOKEN_NOT_WORD, $tokens[0][6]);
-        $this->assertEquals(RegexTokenizer::TOKEN_NOT_INT, $tokens[0][7]);
-        $this->assertEquals(RegexTokenizer::TOKEN_NOT_WHITESPACE, $tokens[0][8]);
-        $this->assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 46], $tokens[0][9]);
-        $this->assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 43], $tokens[0][10]);
-        $this->assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 45], $tokens[0][11]);
-        $this->assertEquals(true, is_int($tokens[1]));
-        $this->assertEquals(21, $tokens[1]);
+        static::assertIsArray($tokens[0]);
+        static::assertEquals(RegexTokenizer::TOKEN_WORD, $tokens[0][0]);
+        static::assertEquals(RegexTokenizer::TOKEN_INT, $tokens[0][1]);
+        static::assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 36], $tokens[0][2]);
+        static::assertEquals(RegexTokenizer::TOKEN_WHITESPACE, $tokens[0][3]);
+        static::assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 93], $tokens[0][4]);
+        static::assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 66], $tokens[0][5]);
+        static::assertEquals(RegexTokenizer::TOKEN_NOT_WORD, $tokens[0][6]);
+        static::assertEquals(RegexTokenizer::TOKEN_NOT_INT, $tokens[0][7]);
+        static::assertEquals(RegexTokenizer::TOKEN_NOT_WHITESPACE, $tokens[0][8]);
+        static::assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 46], $tokens[0][9]);
+        static::assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 43], $tokens[0][10]);
+        static::assertEquals(['type' => RegexTokenizer::TYPE_CHAR, 'value' => 45], $tokens[0][11]);
+        static::assertIsInt($tokens[1]);
+        static::assertEquals(21, $tokens[1]);
 
         $tokens = RegexTokenizer::tokenizeClass('a-z0-9]');
-        $this->assertEquals(true, is_array($tokens[0]));
-        $this->assertEquals(['type' => RegexTokenizer::TYPE_RANGE, 'from' => 97, 'to' => 122], $tokens[0][0]);
-        $this->assertEquals(['type' => RegexTokenizer::TYPE_RANGE, 'from' => 48, 'to' => 57], $tokens[0][1]);
+        static::assertIsArray($tokens[0]);
+        static::assertEquals(['type' => RegexTokenizer::TYPE_RANGE, 'from' => 97, 'to' => 122], $tokens[0][0]);
+        static::assertEquals(['type' => RegexTokenizer::TYPE_RANGE, 'from' => 48, 'to' => 57], $tokens[0][1]);
 
         $tokens = RegexTokenizer::tokenizeClass('\\\\-~]');
-        $this->assertEquals(true, is_array($tokens[0]));
-        $this->assertEquals(['type' => RegexTokenizer::TYPE_RANGE, 'from' => 92, 'to' => 126], $tokens[0][0]);
+        static::assertIsArray($tokens[0]);
+        static::assertEquals(['type' => RegexTokenizer::TYPE_RANGE, 'from' => 92, 'to' => 126], $tokens[0][0]);
     }
 
     /**
@@ -85,12 +91,12 @@ class RegexTokenizerTest extends TestCase
             );
         }
 
-        $this->assertEquals(
+        static::assertEquals(
             ['type' => RegexTokenizer::TYPE_ROOT, 'stack' => str_to_tokens('walnuts')],
             RegexTokenizer::exports('walnuts')
         );
 
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -104,7 +110,7 @@ class RegexTokenizerTest extends TestCase
             RegexTokenizer::exports('^yes$')
         );
 
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -125,17 +131,17 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('\\w\\W\\d\\D\\s\\S.');
-        $this->assertEquals(true, is_array($tokens['stack']));
-        $this->assertEquals(RegexTokenizer::TOKEN_WORD, $tokens['stack'][0]);
-        $this->assertEquals(RegexTokenizer::TOKEN_NOT_WORD, $tokens['stack'][1]);
-        $this->assertEquals(RegexTokenizer::TOKEN_INT, $tokens['stack'][2]);
-        $this->assertEquals(RegexTokenizer::TOKEN_NOT_INT, $tokens['stack'][3]);
-        $this->assertEquals(RegexTokenizer::TOKEN_WHITESPACE, $tokens['stack'][4]);
-        $this->assertEquals(RegexTokenizer::TOKEN_NOT_WHITESPACE, $tokens['stack'][5]);
-        $this->assertEquals(RegexTokenizer::TOKEN_ANY_CHAR, $tokens['stack'][6]);
+        static::assertIsArray($tokens['stack']);
+        static::assertEquals(RegexTokenizer::TOKEN_WORD, $tokens['stack'][0]);
+        static::assertEquals(RegexTokenizer::TOKEN_NOT_WORD, $tokens['stack'][1]);
+        static::assertEquals(RegexTokenizer::TOKEN_INT, $tokens['stack'][2]);
+        static::assertEquals(RegexTokenizer::TOKEN_NOT_INT, $tokens['stack'][3]);
+        static::assertEquals(RegexTokenizer::TOKEN_WHITESPACE, $tokens['stack'][4]);
+        static::assertEquals(RegexTokenizer::TOKEN_NOT_WHITESPACE, $tokens['stack'][5]);
+        static::assertEquals(RegexTokenizer::TOKEN_ANY_CHAR, $tokens['stack'][6]);
 
         $tokens = RegexTokenizer::exports('[$!a-z123] thing [^0-9]');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -169,7 +175,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports("[\t\r\n\u{2028}\u{2029} ]");
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -191,7 +197,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('[01]-[ab]');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -204,7 +210,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('foo|bar|za');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'options' => [str_to_tokens('foo'), str_to_tokens('bar'), str_to_tokens('za')],
@@ -213,7 +219,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('hey (there)');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -228,7 +234,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('(?:loner)');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [['type' => RegexTokenizer::TYPE_GROUP, 'remember' => false, 'stack' => str_to_tokens('loner')]],
@@ -237,7 +243,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('what(?!ever)');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -252,7 +258,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('hello(?= there)');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -268,7 +274,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('a(b(c|(?:d))fg) @_@');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -298,7 +304,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('(?:pika){2}');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -318,7 +324,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('NO{6,}');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -333,7 +339,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('pika\\.\\.\\. chu{3,20}!{1,2}');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => array_merge(
@@ -348,10 +354,10 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('a{mustache}');
-        $this->assertEquals(['type' => RegexTokenizer::TYPE_ROOT, 'stack' => str_to_tokens('a{mustache}')], $tokens);
+        static::assertEquals(['type' => RegexTokenizer::TYPE_ROOT, 'stack' => str_to_tokens('a{mustache}')], $tokens);
 
         $tokens = RegexTokenizer::exports('hey(?: you)?');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => array_merge(
@@ -370,7 +376,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('(no )+');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [[
@@ -382,7 +388,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('XF*D');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [
@@ -395,7 +401,7 @@ class RegexTokenizerTest extends TestCase
         );
 
         $tokens = RegexTokenizer::exports('<(\\w+)>\\w*<\\1>');
-        $this->assertEquals(
+        static::assertEquals(
             [
                 'type' => RegexTokenizer::TYPE_ROOT,
                 'stack' => [

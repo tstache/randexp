@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Tests\RandExp;
 
@@ -7,6 +8,11 @@ use PHPUnit\Framework\TestCase;
 use RandExp\RandExp;
 use RandExp\RegexException;
 
+use function max;
+use function mb_ord;
+use function mb_strlen;
+use function mb_substr;
+use function min;
 use function preg_match;
 use function strlen;
 
@@ -20,7 +26,7 @@ class RandExpTest extends TestCase
     {
         $re = new RandExp('.*');
         $re->maxRepetition = 0;
-        $this->assertEquals('', $re->generate());
+        static::assertEquals('', $re->generate());
     }
 
     /**
@@ -35,45 +41,7 @@ class RandExpTest extends TestCase
         $bRE = new RandExp('.{100}', 'f');
         $b = $bRE->generate();
 
-        $this->assertEquals($a, $b, 'same seed should produce same output');
-    }
-
-    /**
-     * @return void
-     */
-    public function testRange(): void
-    {
-        function genMaxChar(RandExp $re) {
-            $output = $re->generate();
-            $maxChar = 0;
-            $length = strlen($output);
-            for ($i = 0; $i < $length; $i++) {
-                $maxChar = max($maxChar, ord($output[$i]));
-            }
-            return $maxChar;
-        }
-
-        $re = new RandExp('.{100}');
-        $re->charRange->subtract(0, 126);
-        $re->charRange->add(127, 65535);
-        $maxChar = genMaxChar($re);
-        $this->assertTrue($maxChar >= 127, 'non-ascii characters should have been generated');
-
-        $re = new RandExp('[\s\S]{100}');
-        $maxChar = genMaxChar($re);
-        $this->assertTrue($maxChar < 127, 'ascii characters should have been generated');
-        $re->charRange->subtract(0, 126);
-        $re->charRange->add(127, 65535);
-        $maxChar = genMaxChar($re);
-        $this->assertTrue($maxChar >= 127, 'non-ascii characters should have been generated');
-
-        $re = new RandExp('[^a]{100}');
-        $maxChar = genMaxChar($re);
-        $this->assertTrue($maxChar < 127, 'ascii characters should have been generated');
-        $re->charRange->subtract(0, 126);
-        $re->charRange->add(127, 65535);
-        $maxChar = genMaxChar($re);
-        $this->assertTrue($maxChar >= 127, 'non-ascii characters should have been generated');
+        static::assertEquals($a, $b, 'same seed should produce same output');
     }
 
     /**
@@ -82,11 +50,61 @@ class RandExpTest extends TestCase
      */
     public function testBasicGeneration(): void
     {
-        $this->assertEquals(4, strlen((new RandExp('\\d{4}'))->generate()));
-        $this->assertEquals('hi', (new RandExp('hi(?= no one)'))->generate());
-        $this->assertEquals('hi', (new RandExp('hi(?! no one)'))->generate());
+        static::assertEquals(4, strlen((new RandExp('\\d{4}'))->generate()));
+        static::assertEquals('hi', (new RandExp('hi(?= no one)'))->generate());
+        static::assertEquals('hi', (new RandExp('hi(?! no one)'))->generate());
         // Matches the ASCII character expressed by the UNICODE XXXX
-        $this->assertEquals("\u{00A3}", (new RandExp("\\u00A3"))->generate());
+        static::assertEquals("\u{00A3}", (new RandExp("\\u00A3"))->generate());
+    }
+
+    public function assertCharactersBetween(string $actualValue, int $expectedMin, int $expectedMax, string $message): void
+    {
+        $length = mb_strlen($actualValue);
+        $maxChar = 0;
+        $minChar = PHP_INT_MAX;
+        for ($i = 0; $i < $length; $i++) {
+            $maxChar = max($maxChar, mb_ord(mb_substr($actualValue, $i, 1)));
+            $minChar = min($minChar, mb_ord(mb_substr($actualValue, $i, 1)));
+        }
+        static::assertLessThanOrEqual($expectedMax, $maxChar, $message);
+        static::assertGreaterThanOrEqual($expectedMin, $minChar, $message);
+    }
+
+    /**
+     * @dataProvider rangeProvider
+     *
+     * @param string $regex
+     *
+     * @return void
+     * @throws RegexException
+     * @throws Exception
+     */
+    public function testRange(string $regex): void
+    {
+        $re = new RandExp($regex);
+
+        // Before changing range
+        $this->assertCharactersBetween($re->generate(), 0, 127, 'ascii characters should have been generated');
+
+        // After changing range
+        $re->charRange->subtract(0, 126);
+        $re->charRange->add(127, 65535);
+        $this->assertCharactersBetween($re->generate(), 127, 65535, 'non-ascii characters should have been generated');
+    }
+
+    /**
+     * A string that matches these regular expressions does not exist
+     *
+     * @return string[]
+     */
+    public function rangeProvider(): array
+    {
+        return [
+            ['.{100}'],
+            ['[\s\S]{100}'],
+            ['[^a]{100}'],
+            ['.{10000}'],
+        ];
     }
 
     /**
@@ -105,7 +123,7 @@ class RandExpTest extends TestCase
         for ($k = 0; $k < 5; $k++) {
             $str = $rand->generate();
             $match = (bool)preg_match("/$pattern/u", $str);
-            $this->assertNotTrue($match, "Generated string '$str' matches regexp '$pattern'");
+            static::assertNotTrue($match, "Generated string '$str' matches regexp '$pattern'");
         }
     }
 
@@ -145,7 +163,7 @@ class RandExpTest extends TestCase
         for ($k = 0; $k < 5; $k++) {
             $str = $rand->generate();
             $match = (bool)preg_match("/$pattern/u", $str);
-            $this->assertTrue($match, "Generated string '$str' does not match regexp '$pattern'");
+            static::assertTrue($match, "Generated string '$str' does not match regexp '$pattern'");
         }
     }
 
@@ -284,7 +302,7 @@ class RandExpTest extends TestCase
      */
     public function testEscapedPatterns(string $pattern, string $expectation): void
     {
-        $this->assertEquals($expectation, (new RandExp($pattern))->generate());
+        static::assertEquals($expectation, (new RandExp($pattern))->generate());
     }
 
     public function escapedPatternProvider(): array
