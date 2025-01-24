@@ -24,7 +24,7 @@ class RangeSet
     public array $ranges;
     public int $length;
 
-    public function __construct(int $low = null, int $high = null)
+    public function __construct(?int $low = null, ?int $high = null)
     {
         $this->ranges = [];
         $this->length = 0;
